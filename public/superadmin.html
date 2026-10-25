@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Super-admin — Forum DSI Next Step</title>
+<style>
+:root{--navy:#0A2540;--navy2:#11376C;--cyan:#06B6D4;--cyan2:#00CFE8;--cyan-tint:#ECFEFF;
+  --slate:#334155;--grey:#64748B;--soft:#94A3B8;--line:#E2E8F0;--page:#F6F9FC;--danger:#DC2626;
+  --f:"Segoe UI",system-ui,sans-serif;--mono:ui-monospace,Consolas,monospace;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--f);background:var(--page);color:var(--slate);font-size:15px}
+h1,h2,h3{margin:0;color:var(--navy);letter-spacing:-.01em}
+a{color:var(--navy2)}
+.wrap{max-width:1360px;margin:0 auto;padding:0 20px}
+/* login */
+#login{min-height:100vh;display:grid;place-items:center;background:radial-gradient(700px 500px at 80% 10%,rgba(0,207,232,.18),transparent 60%),linear-gradient(135deg,#0A2540,#11376C)}
+.card{background:#fff;border-radius:22px;padding:34px;width:min(420px,92vw);box-shadow:0 40px 90px -30px rgba(10,37,64,.6);display:flex;flex-direction:column;gap:16px}
+.card h1{font-size:24px}
+.card p{margin:0;color:var(--grey)}
+input{height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 16px;font:inherit;font-size:17px;width:100%}
+input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 4px rgba(0,207,232,.16)}
+.btn{height:52px;border:0;border-radius:12px;background:var(--navy);color:#fff;font-weight:700;font-size:16px;cursor:pointer;padding:0 20px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.alt{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.btn:active{transform:scale(.98)}
+.err{color:var(--danger);font-size:14px;min-height:18px}
+/* app */
+#app{display:none}
+header.top{background:var(--navy);color:#fff;position:sticky;top:0;z-index:5}
+header.top .wrap{display:flex;align-items:center;gap:14px;padding:16px 20px;flex-wrap:wrap}
+header.top h1{color:#fff;font-size:20px}
+header.top .eye{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan2)}
+.spacer{flex:1}
+.tbtn{height:40px;border-radius:999px;border:1.5px solid rgba(255,255,255,.25);background:transparent;color:#fff;padding:0 16px;font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.tbtn.cyan{background:var(--cyan2);color:var(--navy);border-color:transparent}
+.muted{color:var(--soft);font-size:13px}
+section{padding:24px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.kpi{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:0 8px 24px -16px rgba(10,37,64,.4)}
+.kpi b{display:block;font-size:34px;color:var(--navy);line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi.alarm b{color:var(--danger)}
+.kpi.good b{color:#059669}
+.kpi span{color:var(--grey);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+.box{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:20px 22px;box-shadow:0 8px 24px -16px rgba(10,37,64,.4)}
+.box h3{font-size:15px;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.box h3::before{content:"";width:9px;height:9px;background:var(--cyan);border-radius:2px}
+.bar{display:grid;grid-template-columns:1fr auto;gap:5px 12px;align-items:center;margin-bottom:11px}
+.bar .n{font-size:14px;color:var(--slate);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .c{font-family:var(--mono);font-size:13px;color:var(--navy);font-variant-numeric:tabular-nums}
+.bar .track{grid-column:1/-1;height:8px;border-radius:8px;background:var(--page);overflow:hidden}
+.bar .track i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--cyan),var(--cyan2))}
+.bar.rank1 .track i{background:linear-gradient(90deg,var(--navy2),var(--cyan))}
+.empty{color:var(--soft);font-size:14px}
+.hours{display:flex;align-items:flex-end;gap:3px;height:120px}
+.hours .h{flex:1;background:var(--cyan-tint);border-radius:4px 4px 0 0;position:relative;min-height:2px}
+.hours .h i{position:absolute;inset:0;background:linear-gradient(180deg,var(--cyan2),var(--cyan));border-radius:4px 4px 0 0}
+.hours-lbl{display:flex;justify-content:space-between;color:var(--soft);font-size:11px;margin-top:4px;font-family:var(--mono)}
+.tbl-wrap{overflow-x:auto;border:1.5px solid var(--line);border-radius:14px;background:#fff}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:720px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--navy);color:#fff;font-size:11px;letter-spacing:.1em;text-transform:uppercase;position:sticky;top:0}
+td b{color:var(--navy)}
+.mono{font-family:var(--mono);font-size:12px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.pill.soc{background:var(--cyan-tint);color:var(--navy)}
+.pill.leak{background:#FEE2E2;color:#991B1B}
+.pill.scan{background:#FEF3C7;color:#92400E}
+.tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.tab{height:36px;border-radius:999px;border:1.5px solid var(--line);background:#fff;color:var(--navy);padding:0 16px;font-weight:600;font-size:13px;cursor:pointer}
+.tab[aria-selected=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.setrow{display:grid;grid-template-columns:260px 1fr;gap:12px;align-items:center;margin-bottom:12px}
+.setrow label{font-weight:600;color:var(--navy);font-size:14px}
+.setrow input,.setrow select{height:44px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;font-size:15px;width:100%}
+.setrow input:focus,.setrow select:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 4px rgba(0,207,232,.16)}
+.srcbadge{display:inline-block;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;background:var(--cyan-tint);color:var(--navy)}
+.warn{margin-top:18px;background:#FEF3C7;color:#92400E;border:1.5px solid #FCD34D;border-radius:12px;padding:12px 16px;font-weight:600;font-size:14px}
+.search{height:36px;border:1.5px solid var(--line);border-radius:999px;padding:0 16px;font:inherit;font-size:13px;width:min(360px,100%)}
+.search:focus{outline:none;border-color:var(--cyan)}
+@media(max-width:640px){.kpi b{font-size:28px}.setrow{grid-template-columns:1fr}}
+</style>
+</head><body>
+
+<div id="login">
+  <form class="card" id="loginForm">
+    <div class="eye" style="color:var(--cyan);font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:700">Next Step · Forum DSI</div>
+    <h1>Super-admin</h1>
+    <p>Tableau de bord des visiteurs, préférences et journaux de la borne.</p>
+    <input id="user" type="text" placeholder="Identifiant" autocomplete="username" autocapitalize="off" spellcheck="false">
+    <input id="pass" type="password" placeholder="Mot de passe" autocomplete="current-password">
+    <div class="err" id="loginErr"></div>
+    <button class="btn" type="submit">Se connecter</button>
+  </form>
+</div>
+
+<div id="app">
+  <header class="top"><div class="wrap">
+    <div><div class="eye">Forum DSI 2026</div><h1>Super-admin — Next Step</h1></div>
+    <div class="spacer"></div>
+    <span class="muted" id="who"></span>
+    <span class="muted" id="stamp"></span>
+    <button class="tbtn" id="autoBtn">Auto-actualisation : off</button>
+    <button class="tbtn" id="refreshBtn">↻ Actualiser</button>
+    <a class="tbtn cyan" id="csvBtn">⬇ Export CSV</a>
+    <button class="tbtn" id="logoutBtn">Quitter</button>
+  </div></header>
+
+  <div class="wrap"><div id="defaultWarn" class="warn" style="display:none">⚠ Identifiants par défaut en cours d'utilisation — changez-les dans <a href="#account">Compte super-admin</a>.</div></div>
+
+  <section><div class="wrap">
+    <div class="kpis" id="kpis"></div>
+  </div></section>
+
+  <section style="padding-top:0"><div class="wrap">
+    <h2 style="margin-bottom:14px">Ce qui plaît le plus</h2>
+    <div class="grid" id="prefGrid"></div>
+  </div></section>
+
+  <section style="padding-top:0"><div class="wrap">
+    <h2 style="margin-bottom:14px">Activité</h2>
+    <div class="grid" id="actGrid"></div>
+  </div></section>
+
+  <section style="padding-top:0"><div class="wrap">
+    <h2 style="margin-bottom:14px">Paramètres — source de données</h2>
+    <div class="box" style="max-width:820px">
+      <div id="setStatus" class="muted" style="margin-bottom:14px"></div>
+      <div class="setrow"><label>Source des fuites</label>
+        <select id="setSource"><option value="elastic">Elasticsearch (interne)</option><option value="scanbe4">ScanBe4 API</option></select></div>
+      <div class="setrow"><label>ScanBe4 — API fuites (GET)</label><input id="setLeaksUrl" placeholder="https://scanbe4.com/api/v1/leaks" autocomplete="off"></div>
+      <div class="setrow"><label>ScanBe4 — API scan (POST)</label><input id="setScanUrl" placeholder="https://scanbe4.com/api/v1/scans" autocomplete="off"></div>
+      <div class="setrow"><label>ScanBe4 — Jeton (Bearer)</label><input id="setToken" type="password" placeholder="sb4_lk_…" autocomplete="new-password"></div>
+      <div class="setrow"><label>Elasticsearch — URL</label><input id="setEsUrl" placeholder="http://10.9.21.32:9200" autocomplete="off"></div>
+      <div class="setrow"><label>Elasticsearch — Index</label><input id="setEsIndex" placeholder="leaks_data" autocomplete="off"></div>
+      <div class="setrow"><label>Elasticsearch — Utilisateur</label><input id="setEsUser" placeholder="(optionnel)" autocomplete="off"></div>
+      <div class="setrow"><label>Elasticsearch — Mot de passe</label><input id="setEsPass" type="password" placeholder="(optionnel)" autocomplete="new-password"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px">
+        <button class="btn" id="setSave" style="height:44px">Enregistrer</button>
+        <button class="btn alt" id="setTest" style="height:44px">Tester la connexion</button>
+        <span class="muted" id="setMsg"></span>
+      </div>
+      <p class="muted" style="margin:14px 0 0">Les secrets restent côté serveur (stockés en base, jamais renvoyés en clair au navigateur). Laissez un champ secret vide pour conserver la valeur actuelle ; saisissez « - » pour effacer le mot de passe Elasticsearch.</p>
+    </div>
+  </div></section>
+
+  <section style="padding-top:0" id="account"><div class="wrap">
+    <h2 style="margin-bottom:14px">Compte super-admin</h2>
+    <div class="box" style="max-width:820px">
+      <div class="setrow"><label>Identifiant</label><input id="accUser" autocomplete="username"></div>
+      <div class="setrow"><label>Mot de passe actuel</label><input id="accCur" type="password" autocomplete="current-password"></div>
+      <div class="setrow"><label>Nouveau mot de passe</label><input id="accNew" type="password" placeholder="8 caractères minimum" autocomplete="new-password"></div>
+      <div class="setrow"><label>Confirmer</label><input id="accNew2" type="password" autocomplete="new-password"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px">
+        <button class="btn" id="accSave" style="height:44px">Changer les identifiants</button>
+        <span class="muted" id="accMsg"></span>
+      </div>
+      <p class="muted" style="margin:14px 0 0">Les autres sessions ouvertes sont déconnectées après le changement.</p>
+    </div>
+  </div></section>
+
+  <section style="padding-top:0"><div class="wrap">
+    <h2 style="margin-bottom:14px">Données</h2>
+    <div class="tabs"><button class="tab" data-tab="leads" aria-selected="true">Visiteurs</button><button class="tab" data-tab="events">Journaux</button>
+      <span class="spacer"></span><input id="search" class="search" type="search" placeholder="Rechercher (nom, société, e-mail, domaine, type…)"></div>
+    <div id="tableHost"></div>
+  </div></section>
+
+  <div style="height:40px"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let TOKEN = sessionStorage.getItem("ns-admin-token") || "";
+let autoTimer = null, curTab = "leads";
+
+const fmt = n => Number(n||0).toLocaleString("fr-FR");
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+async function api(path){
+  const r = await fetch("/api/admin/"+path, { headers:{ Authorization:"Bearer "+TOKEN } });
+  if (r.status===401) throw new Error("401");
+  if (!r.ok) throw new Error("err");
+  return r.json();
+}
+
+async function post(path, body){
+  const r = await fetch("/api/admin/"+path, { method:"POST", headers:{ Authorization:"Bearer "+TOKEN, "Content-Type":"application/json" }, body:JSON.stringify(body||{}) });
+  let j = {}; try{ j = await r.json(); }catch{}
+  if (r.status===401 && path!=="login") logout();
+  return { ok:r.ok, status:r.status, json:j };
+}
+
+/* ----- login ----- */
+$("#loginForm").onsubmit = async e => {
+  e.preventDefault();
+  $("#loginErr").textContent = "";
+  const { ok, json } = await post("login", { user:$("#user").value.trim(), pass:$("#pass").value });
+  if (!ok){ $("#loginErr").textContent = json.error || "Identifiants invalides."; return; }
+  TOKEN = json.token; sessionStorage.setItem("ns-admin-token", TOKEN);
+  $("#pass").value = "";
+  enter(json);
+};
+function enter(me){ $("#login").style.display="none"; $("#app").style.display="block";
+  $("#csvBtn").href = "/api/admin/export.csv?token=" + encodeURIComponent(TOKEN);
+  $("#who").textContent = "Connecté : " + me.user;
+  $("#accUser").value = me.user;
+  $("#defaultWarn").style.display = me.defaultCreds ? "block" : "none";
+  loadAll(); loadSettingsForm(); }
+
+/* ----- renderers ----- */
+function bars(list){
+  if (!list || !list.length) return `<div class="empty">Aucune donnée pour l'instant.</div>`;
+  const max = Math.max(1, ...list.map(x=>x.count));
+  return list.map((x,i)=>`<div class="bar ${i===0?"rank1":""}"><div class="n">${esc(x.name)}</div><div class="c">${fmt(x.count)}</div><div class="track"><i style="width:${Math.max(4,Math.round(x.count/max*100))}%"></i></div></div>`).join("");
+}
+function objBars(obj){ return bars(Object.entries(obj||{}).map(([name,count])=>({name,count})).filter(x=>x.count>=0)); }
+function box(title, inner){ return `<div class="box"><h3>${esc(title)}</h3>${inner}</div>`; }
+
+function renderStats(s){
+  $("#stamp").textContent = "Mis à jour " + new Date(s.generatedAt).toLocaleTimeString("fr-FR");
+  const t = s.totals, lk = s.leakStats;
+  $("#kpis").innerHTML = [
+    ["Visiteurs", t.leads, ""], ["Offres générées", t.offers, ""], ["Demandes cloud", t.cloud, ""],
+    ["Analyses posture", t.scans, ""], ["Vérifs de fuites", t.leaks, ""],
+    ["Domaines exposés", lk.withExposure, "alarm"], ["Taux d'exposition", lk.exposureRate+"%", lk.exposureRate>0?"alarm":"good"],
+    ["Parcours terminés", t.completed, "good"],
+  ].map(([l,v,c])=>`<div class="kpi ${c}"><b>${typeof v==="number"?fmt(v):esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+
+  $("#prefGrid").innerHTML = [
+    box("Parcours choisi", objBars({ "Offre Forum":s.starts.pack, "Analyse posture":s.starts.scan, "Vérif. fuites":s.starts.leak })),
+    box("Mix de domaines (leads)", bars(s.domainsMix)),
+    box("Priorités SOC les plus demandées", bars(s.goals)),
+    box("Services cloud les plus demandés", bars(s.services)),
+    box("Niveau d'offre retenu", bars(s.offers)),
+    box("Secteurs d'activité", bars(s.sectors)),
+    box("Fonctions des visiteurs", bars(s.roles)),
+    box("Échéance antivirus / EPP", bars(s.eppUrgency)),
+    box("Échéance infrastructure", bars(s.infraUrgency)),
+  ].join("");
+
+  const hmax = Math.max(1, ...s.byHour);
+  const hours = `<div class="hours">${s.byHour.map(v=>`<div class="h" style="height:${Math.round(v/hmax*100)}%" title="${v}"><i></i></div>`).join("")}</div><div class="hours-lbl"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div>`;
+  $("#actGrid").innerHTML = [
+    box("Progression (écrans vus)", objBars(s.funnel)),
+    box("Affluence par heure", hours),
+    box("Domaines vérifiés (fuites)", bars(lk.topDomains)),
+    box("Endpoints (SOC)", `<div class="bar"><div class="n">Moyenne</div><div class="c">${fmt(s.endpoints.avg)}</div></div><div class="bar"><div class="n">Maximum</div><div class="c">${fmt(s.endpoints.max)}</div></div><div class="bar"><div class="n">Leads SOC</div><div class="c">${fmt(s.endpoints.samples)}</div></div>`),
+    box("Fuites — synthèse", `<div class="bar"><div class="n">Vérifications</div><div class="c">${fmt(lk.checks)}</div></div><div class="bar"><div class="n">Avec exposition</div><div class="c">${fmt(lk.withExposure)}</div></div><div class="bar"><div class="n">Comptes exposés (moy.)</div><div class="c">${fmt(lk.avgAccounts)}</div></div>`),
+    box("Activité par jour", bars((s.byDay||[]).map(d=>({name:d.date,count:d.count})))),
+  ].join("");
+}
+
+function renderLeads(leads){
+  if (!leads.length) return `<div class="box"><div class="empty">Aucun visiteur enregistré.</div></div>`;
+  const rows = leads.map(l=>{
+    const d=new Date(l.createdAt);
+    const dom=(l.domains||[]);
+    const tags = [dom.includes("soc")?`<span class="pill soc">SOC ${esc(l.soc?.offered||"")}</span>`:"",
+      dom.includes("cloud")?`<span class="pill soc">Cloud</span>`:"",
+      l.leak?`<span class="pill leak">Fuites${l.leak.total?` ${fmt(l.leak.total)}`:""}</span>`:"",
+      l.scan?`<span class="pill scan">Analyse</span>`:""].join(" ");
+    return `<tr><td class="mono">${esc(l.ref||"")}<br>${d.toLocaleDateString("fr-FR")} ${d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</td>
+      <td><b>${esc(l.contact?.name||"")}</b><br>${esc(l.contact?.role||"")}</td>
+      <td>${esc(l.contact?.company||"")}<br><span class="muted">${esc(l.contact?.sector||"")}</span></td>
+      <td class="mono">${esc(l.contact?.email||"")}<br>${esc(l.contact?.phone||"")}</td>
+      <td>${tags}${l.soc?`<br><span class="muted">${l.soc.endpoints} ep · ${l.soc.nCloud?.vcpu||0} vCPU</span>`:""}</td></tr>`;
+  }).join("");
+  return `<div class="tbl-wrap"><table><thead><tr><th>Réf / date</th><th>Contact</th><th>Organisation</th><th>Coordonnées</th><th>Intérêts</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function renderEvents(events){
+  if (!events.length) return `<div class="box"><div class="empty">Aucun événement.</div></div>`;
+  const rows = events.map(e=>{
+    const d=new Date(e.ts);
+    return `<tr><td class="mono">${d.toLocaleDateString("fr-FR")} ${d.toLocaleTimeString("fr-FR")}</td>
+      <td><b>${esc(e.type)}</b></td><td class="mono">${esc(e.ref||"")}</td>
+      <td class="mono">${esc(JSON.stringify(e.detail||{}))}</td><td class="mono">${esc(e.ip||"")}</td></tr>`;
+  }).join("");
+  return `<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Réf</th><th>Détail</th><th>IP</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+let rows = { leads:[], events:[] };
+function drawTable(){
+  const q = $("#search").value.trim().toLowerCase();
+  const list = rows[curTab].filter(x => !q || JSON.stringify(x).toLowerCase().includes(q));
+  $("#tableHost").innerHTML = curTab==="leads" ? renderLeads(list) : renderEvents(list);
+}
+async function loadTable(){
+  try{
+    if (curTab==="leads") rows.leads = (await api("leads")).leads;
+    else rows.events = (await api("events")).events;
+    drawTable();
+  }catch(e){ if(String(e.message)==="401") logout(); }
+}
+async function loadAll(){
+  try{ renderStats(await api("stats")); await loadTable(); }
+  catch(e){ if(String(e.message)==="401") logout(); }
+}
+function logout(){
+  const t = TOKEN; TOKEN = ""; sessionStorage.removeItem("ns-admin-token");
+  if (t) fetch("/api/admin/logout", { method:"POST", headers:{ Authorization:"Bearer "+t } }).finally(()=>location.reload());
+  else location.reload();
+}
+
+/* ----- controls ----- */
+/* ----- settings ----- */
+async function loadSettingsForm(){
+  try{
+    const s = await api("settings");
+    $("#setSource").value = s.leakSource || "elastic";
+    $("#setLeaksUrl").value = (s.sb4 && s.sb4.leaksUrl) || "";
+    $("#setScanUrl").value = (s.sb4 && s.sb4.scanUrl) || "";
+    $("#setToken").value = "";
+    $("#setToken").placeholder = (s.sb4 && s.sb4.tokenSet) ? ("défini : " + s.sb4.tokenHint + " — laisser vide pour conserver") : "sb4_lk_…";
+    $("#setEsUrl").value = (s.es && s.es.url) || "";
+    $("#setEsIndex").value = (s.es && s.es.index) || "";
+    $("#setEsUser").value = (s.es && s.es.user) || "";
+    $("#setEsPass").value = "";
+    $("#setEsPass").placeholder = (s.es && s.es.passSet) ? "défini — laisser vide pour conserver" : "(optionnel)";
+    $("#setStatus").innerHTML = "Source active : <span class='srcbadge'>" + (s.leakSource==="scanbe4" ? "ScanBe4 API" : "Elasticsearch") + "</span>";
+  }catch(e){ if(String(e.message)==="401") logout(); }
+}
+async function saveSettings(){
+  const body = { leakSource:$("#setSource").value, sb4LeaksUrl:$("#setLeaksUrl").value.trim(),
+    sb4ScanUrl:$("#setScanUrl").value.trim(), sb4Token:$("#setToken").value, esUrl:$("#setEsUrl").value.trim(), esIndex:$("#setEsIndex").value.trim(),
+    esUser:$("#setEsUser").value.trim(), esPass:$("#setEsPass").value };
+  $("#setMsg").textContent = "Enregistrement…";
+  try{
+    const r = await fetch("/api/admin/settings", { method:"POST", headers:{ Authorization:"Bearer "+TOKEN, "Content-Type":"application/json" }, body:JSON.stringify(body) });
+    if(!r.ok) throw new Error();
+    $("#setMsg").textContent = "Enregistré ✓"; loadSettingsForm();
+  }catch(e){ $("#setMsg").textContent = "Échec de l'enregistrement."; }
+}
+async function testSource(){
+  $("#setMsg").textContent = "Test en cours…";
+  try{
+    const r = await fetch("/api/admin/test", { method:"POST", headers:{ Authorization:"Bearer "+TOKEN, "Content-Type":"application/json" }, body:JSON.stringify({ domain:"example.com" }) });
+    const j = await r.json();
+    $("#setMsg").textContent = j.ok ? `OK (${j.source}) — ${fmt(j.total)} résultats pour example.com` : ("Échec : " + (j.error||""));
+  }catch(e){ $("#setMsg").textContent = "Échec du test."; }
+}
+$("#setSave").onclick = saveSettings;
+$("#setTest").onclick = testSource;
+
+/* ----- account ----- */
+$("#accSave").onclick = async () => {
+  const user = $("#accUser").value.trim(), pass = $("#accNew").value;
+  if (pass !== $("#accNew2").value){ $("#accMsg").textContent = "Les mots de passe ne correspondent pas."; return; }
+  $("#accMsg").textContent = "Enregistrement…";
+  const { ok, json } = await post("credentials", { user, pass, current:$("#accCur").value });
+  if (!ok){ $("#accMsg").textContent = json.error || "Échec."; return; }
+  ["#accCur","#accNew","#accNew2"].forEach(s=>$(s).value="");
+  $("#accMsg").textContent = "Identifiants mis à jour ✓";
+  $("#who").textContent = "Connecté : " + json.user;
+  $("#defaultWarn").style.display = "none";
+};
+$("#search").oninput = drawTable;
+
+$("#refreshBtn").onclick = loadAll;
+$("#logoutBtn").onclick = logout;
+$("#autoBtn").onclick = () => {
+  if (autoTimer){ clearInterval(autoTimer); autoTimer=null; $("#autoBtn").textContent="Auto-actualisation : off"; }
+  else { autoTimer=setInterval(loadAll, 15000); $("#autoBtn").textContent="Auto-actualisation : 15s"; }
+};
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  curTab=t.dataset.tab;
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected", x===t));
+  loadTable();
+});
+
+/* auto-enter if the stored session is still valid */
+if (TOKEN){ api("me").then(enter).catch(()=>{ TOKEN=""; sessionStorage.removeItem("ns-admin-token"); }); }
+</script>
+</body></html>

@@ -1,0 +1,50 @@
+# Production stack: the kiosk app + MongoDB.
+# Configure secrets in a .env file next to this one (see .env.docker.example).
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:-changeme}
+    volumes:
+      - mongo-data:/data/db
+    # Mongo stays internal to the compose network. Uncomment to inspect from the host:
+    # ports:
+    #   - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      HOST: 0.0.0.0
+      MONGO_URL: mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-changeme}@mongo:27017/?authSource=admin
+      MONGO_DB: ${MONGO_DB:-forum_dsi}
+      LEAK_SOURCE: ${LEAK_SOURCE:-elastic}
+      ES_URL: ${ES_URL:-http://10.9.21.32:9200}
+      ES_INDEX: ${ES_INDEX:-leaks_data}
+      ES_USER: ${ES_USER:-}
+      ES_PASS: ${ES_PASS:-}
+      SB4_LEAKS_URL: ${SB4_LEAKS_URL:-https://scanbe4.com/api/v1/leaks}
+      SB4_SCAN_URL: ${SB4_SCAN_URL:-https://scanbe4.com/api/v1/scans}
+      SB4_TOKEN: ${SB4_TOKEN:-}
+      ADMIN_USER: ${ADMIN_USER:-superadmin}
+      ADMIN_PASS: ${ADMIN_PASS:-Admin@2026}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    # If Elasticsearch runs on the Docker HOST itself (not a separate LAN IP),
+    # set ES_URL=http://host.docker.internal:9200 and uncomment:
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+
+volumes:
+  mongo-data:

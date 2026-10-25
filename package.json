@@ -1,0 +1,14 @@
+{
+  "name": "forum-dsi-kiosk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Borne Forum DSI Next Step — kiosk + leak-check backend + MongoDB + super-admin",
+  "type": "module",
+  "scripts": {
+    "start": "node server/server.mjs"
+  },
+  "dependencies": {
+    "mongodb": "^6.12.0"
+  },
+  "engines": { "node": ">=18" }
+}
